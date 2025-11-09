@@ -238,207 +238,233 @@
       return `${day} ${month} ${year}`;
     }
 
-    function sendSummary() {
-      if (attendanceRecords.length === 0) {
-        Swal.fire('Error', 'No attendance records to send!', 'error');
-        return;
-      }
+function sendSummary() {
+  if (attendanceRecords.length === 0) {
+    Swal.fire('Error', 'No attendance records to send!', 'error');
+    return;
+  }
 
-      const presentCount = attendanceRecords.filter(record => record.status === 'มา').length;
-      const absentCount = attendanceRecords.filter(record => record.status === 'ขาด').length;
-      const leaveCount = attendanceRecords.filter(record => record.status === 'ลา').length;
-      const lateCount = attendanceRecords.filter(record => record.status === 'สาย').length;
-      const totalCount = attendanceRecords.length;
-      const presentPercentage = ((presentCount / totalCount) * 100).toFixed(2);
-      const absentPercentage = ((absentCount / totalCount) * 100).toFixed(2);
-      const leavePercentage = ((leaveCount / totalCount) * 100).toFixed(2);
-      const latePercentage = ((lateCount / totalCount) * 100).toFixed(2);
+  const presentCount = attendanceRecords.filter(record => record.status === 'มา').length;
+  const absentCount = attendanceRecords.filter(record => record.status === 'ขาด').length;
+  const leaveCount = attendanceRecords.filter(record => record.status === 'ลา').length;
+  const lateCount = attendanceRecords.filter(record => record.status === 'สาย').length;
+  const totalCount = attendanceRecords.length;
+  const presentPercentage = ((presentCount / totalCount) * 100).toFixed(2);
+  const absentPercentage = ((absentCount / totalCount) * 100).toFixed(2);
+  const leavePercentage = ((leaveCount / totalCount) * 100).toFixed(2);
+  const latePercentage = ((lateCount / totalCount) * 100).toFixed(2);
 
-      const now = new Date();
-      const dateString = formatThaiDate(now);
+  const now = new Date();
+  const dateString = formatThaiDate(now);
 
-      let summaryText = `วันที่ ${dateString}\n`;
-      attendanceRecords.forEach(record => {
-        summaryText += `${record.name}: ${record.status}\n`;
-      });
-      summaryText += `\nมาเรียน: ${presentCount} คน คิดเป็น (${presentPercentage}%)\nขาดเรียน: ${absentCount} คน คิดเป็น (${absentPercentage}%)\nลา: ${leaveCount} คน คิดเป็น (${leavePercentage}%)\nสาย: ${lateCount} คน คิดเป็น (${latePercentage}%)`;
+  // NEW: get period + note from first record
+  const period = attendanceRecords[0].period || '';
+  const note   = attendanceRecords[0].note || '';
 
-      const flexMessage = {
-        type: 'flex',
-        altText: 'Attendance Summary',
-        contents: {
-          type: 'bubble',
-          size: 'giga',
-          body: {
+  const flexMessage = {
+    type: 'flex',
+    altText: 'Attendance Summary',
+    contents: {
+      type: 'bubble',
+      size: 'giga',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: `สรุปการมาเรียน ม.5/13`,
+            weight: 'bold',
+            size: 'xl',
+            color: '#1DB446',
+            margin: 'md'
+          },
+          {
+            type: 'text',
+            text: `วันที่ ${dateString}`,
+            size: 'md',
+            color: '#888888'
+          },
+          // NEW: show period if exists
+          ...(period ? [{
+            type: 'text',
+            text: period,
+            size: 'md',
+            color: '#444444',
+            margin: 'sm'
+          }] : []),
+          // NEW: show note if exists
+          ...(note ? [{
             type: 'box',
             layout: 'vertical',
+            margin: 'sm',
             contents: [
               {
                 type: 'text',
-                text: `สรุปการมาเรียน ม.5/13`,
-                weight: 'bold',
-                size: 'xl',
-                color: '#1DB446',
-                margin: 'md'
-              },
-              {
-                type: 'text',
-                text: `วันที่ ${dateString}`,
-                size: 'md',
-                color: '#888888'
-              },
-              {
-                type: 'separator',
-                margin: 'md'
-              },
+                text: `หมายเหตุ: ${note}`,
+                wrap: true,
+                size: 'sm',
+                color: '#555555'
+              }
+            ]
+          }] : []),
+          {
+            type: 'separator',
+            margin: 'md'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'md',
+            spacing: 'sm',
+            contents: attendanceRecords.map(record => ({
+              type: 'box',
+              layout: 'horizontal',
+              contents: [
+                {
+                  type: 'text',
+                  text: record.name,
+                  size: 'md',
+                  color: '#555555',
+                  flex: 4
+                },
+                {
+                  type: 'text',
+                  text: record.status,
+                  size: 'md',
+                  color: record.status === 'มา'
+                    ? '#1DB446'
+                    : (record.status === 'ขาด'
+                        ? '#FF5555'
+                        : (record.status === 'ลา'
+                            ? '#FFC107'
+                            : '#FF8800')),
+                  flex: 2,
+                  align: 'end'
+                }
+              ]
+            }))
+          },
+          {
+            type: 'separator',
+            margin: 'md'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'md',
+            contents: [
               {
                 type: 'box',
-                layout: 'vertical',
-                margin: 'md',
-                spacing: 'sm',
-                contents: attendanceRecords.map(record => ({
-                  type: 'box',
-                  layout: 'horizontal',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: record.name,
-                      size: 'md',
-                      color: '#555555',
-                      flex: 4
-                    },
-                    {
-                      type: 'text',
-                      text: record.status,
-                      size: 'md',
-                      color: record.status === 'มา' ? '#1DB446' : (record.status === 'ขาด' ? '#FF5555' : (record.status === 'ลา' ? '#FFC107' : '#FF8800')),
-                      flex: 2,
-                      align: 'end'
-                    }
-                  ]
-                }))
-              },
-              {
-                type: 'separator',
-                margin: 'md'
-              },
-              {
-                type: 'box',
-                layout: 'vertical',
-                margin: 'md',
+                layout: 'horizontal',
                 contents: [
                   {
-                    type: 'box',
-                    layout: 'horizontal',
-                    contents: [
-                      {
-                        type: 'text',
-                        text: 'มาเรียน:',
-                        size: 'md',
-                        color: '#1DB446',
-                        flex: 3
-                      },
-                      {
-                        type: 'text',
-                        text: `${presentCount} คน (${presentPercentage}%)`,
-                        size: 'md',
-                        color: '#1DB446',
-                        flex: 2,
-                        align: 'end'
-                      }
-                    ]
+                    type: 'text',
+                    text: 'มาเรียน:',
+                    size: 'md',
+                    color: '#1DB446',
+                    flex: 3
                   },
                   {
-                    type: 'box',
-                    layout: 'horizontal',
-                    contents: [
-                      {
-                        type: 'text',
-                        text: 'ขาดเรียน:',
-                        size: 'md',
-                        color: '#FF5555',
-                        flex: 3
-                      },
-                      {
-                        type: 'text',
-                        text: `${absentCount} คน (${absentPercentage}%)`,
-                        size: 'md',
-                        color: '#FF5555',
-                        flex: 2,
-                        align: 'end'
-                      }
-                    ]
+                    type: 'text',
+                    text: `${presentCount} คน (${presentPercentage}%)`,
+                    size: 'md',
+                    color: '#1DB446',
+                    flex: 2,
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: 'ขาดเรียน:',
+                    size: 'md',
+                    color: '#FF5555',
+                    flex: 3
                   },
                   {
-                    type: 'box',
-                    layout: 'horizontal',
-                    contents: [
-                      {
-                        type: 'text',
-                        text: 'ลา:',
-                        size: 'md',
-                        color: '#FFC107',
-                        flex: 3
-                      },
-                      {
-                        type: 'text',
-                        text: `${leaveCount} คน (${leavePercentage}%)`,
-                        size: 'md',
-                        color: '#FFC107',
-                        flex: 2,
-                        align: 'end'
-                      }
-                    ]
+                    type: 'text',
+                    text: `${absentCount} คน (${absentPercentage}%)`,
+                    size: 'md',
+                    color: '#FF5555',
+                    flex: 2,
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: 'ลา:',
+                    size: 'md',
+                    color: '#FFC107',
+                    flex: 3
                   },
                   {
-                    type: 'box',
-                    layout: 'horizontal',
-                    contents: [
-                      {
-                        type: 'text',
-                        text: 'สาย:',
-                        size: 'sm',
-                        color: '#FF8800',
-                        flex: 3
-                      },
-                      {
-                        type: 'text',
-                        text: `${lateCount} คน (${latePercentage}%)`,
-                        size: 'sm',
-                        color: '#FF8800',
-                        flex: 2,
-                        align: 'end'
-                      }
-                    ]
+                    type: 'text',
+                    text: `${leaveCount} คน (${leavePercentage}%)`,
+                    size: 'md',
+                    color: '#FFC107',
+                    flex: 2,
+                    align: 'end'
+                  }
+                ]
+              },
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: 'สาย:',
+                    size: 'sm',
+                    color: '#FF8800',
+                    flex: 3
+                  },
+                  {
+                    type: 'text',
+                    text: `${lateCount} คน (${latePercentage}%)`,
+                    size: 'sm',
+                    color: '#FF8800',
+                    flex: 2,
+                    align: 'end'
                   }
                 ]
               }
             ]
-          },
-          styles: {
-            footer: {
-              separator: true
-            }
           }
+        ]
+      },
+      styles: {
+        footer: {
+          separator: true
         }
-      };
-
-      console.log(JSON.stringify(flexMessage)); // Debug log
-
-      liff.shareTargetPicker([flexMessage])
-        .then((result) => {
-          if (result) {
-            Swal.fire('Success', 'Attendance summary shared successfully!', 'success');
-          } else {
-            Swal.fire('Info', 'ShareTargetPicker was closed without sending the message', 'info');
-          }
-          liff.closeWindow();
-        })
-        .catch((error) => {
-          console.error('Error sharing attendance summary: ', error);
-          Swal.fire('Error', 'Error sharing attendance summary: ' + error, 'error');
-        });
+      }
     }
+  };
+
+  liff.shareTargetPicker([flexMessage])
+    .then((result) => {
+      if (result) {
+        Swal.fire('Success', 'Attendance summary shared successfully!', 'success');
+      } else {
+        Swal.fire('Info', 'ShareTargetPicker was closed without sending the message', 'info');
+      }
+      liff.closeWindow();
+    })
+    .catch((error) => {
+      console.error('Error sharing attendance summary: ', error);
+      Swal.fire('Error', 'Error sharing attendance summary: ' + error, 'error');
+    });
+}
+
   </script>
 
   <footer class="text-center text-lg-start bg-light text-muted" style="position: static; left: 0; bottom: 0; width: 100%;">
